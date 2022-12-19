@@ -213,10 +213,8 @@ function language() {
         } else {
             renderBtn.textContent = "スタート"
         }
-        if ( !gameLeader && !readyForBingo ) {
+        if ( !gameLeader ) {
             readyBtn.textContent = "準備まだ"
-        } else if ( !gameLeader && readyForBingo ) {
-            readyBtn.textContent = "準備OK"
         }
     } else {
         lang = "en"
@@ -398,6 +396,10 @@ readyBtn.addEventListener("click",()=>{
 })
 
 leaderBtn.addEventListener("click",leadGame)
+
+activeArr = shapesArr.slice(0,shapesArr.length)
+language()
+renderGame(activeArr)
 
 function renderGame(arr){
     if ( !topicBtnDisplay.classList.contains("hide-me") ) {
