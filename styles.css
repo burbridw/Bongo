@@ -151,7 +151,7 @@ html, body {
   margin-left: 10px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(15,1fr);
+  grid-template-rows: repeat(16,1fr);
 }
 .bingo-selection-image {
   height: 100%;
