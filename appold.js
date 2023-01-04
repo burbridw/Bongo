@@ -9,7 +9,7 @@ let imgList = ""
 let selectionOpen = false
 let gameActive = false
 let bingoActive = false
-let inputArr = []
+let selectionObj = {}
 let selectedImage = ""
 let selectedBox = ""
 let boxSelected = false
@@ -19,7 +19,7 @@ let readyForBingo = false
 let gameLeader = false
 let currentBingoImage = 0
 let lang = "en"
-let bingoImageSeen = false
+bingoImageSeen = false
 
 const gameBtnDisplay = document.getElementById("game-btn-container")
 const topicBtnDisplay = document.getElementById("topic-btn-container")
@@ -280,12 +280,16 @@ function renderGame(arr){
         bingoGrid.classList.remove("leader-window")
     }
     bingoScreen.innerHTML = ""
-    inputArr = []
+    selectionObj = {}
     selectedBox = ""
     selectedImage = ""
     boxSelected = false
     imageSelected = false
     bingoImageSeen = false
+    imagesReady = 0
+    for ( i of arr ) {
+        selectionObj[i] = false
+    }
     readyForBingo = false
     gameLeader = false
     gameActive = true
@@ -311,107 +315,115 @@ function renderGame(arr){
         if ( !bingoActive ) {
             x.addEventListener("click",()=>{
                 inputImage = x.getAttribute("src")
-                if ( inputArr.includes(inputImage) ) {
-                    let fullGridBoxes = document.querySelectorAll(".full")
-                    fullGridBoxes.forEach( (box)=>{
-                        let thisBox = box.firstChild
-                        if ( thisBox.getAttribute("src") === inputImage ) {
-                            box.classList.add("warning")
-                            setTimeout( ()=>{
-                                box.classList.remove("warning")
-                            },1500)
-                        }
-                    })
-                } else if ( imageSelected ) {
-                    if ( x.classList.contains("selected-image") ) {
-                        x.classList.remove("selected-image")
-                        imageSelected = false
-                    } else {
-                        document.querySelector(".selected-image").classList.remove("selected-image")
-                        x.classList.add("selected-image")
-                        selectedImage = inputImage
-                    }
-                } else if ( !imageSelected ) {
-                    if ( !boxSelected ) {
+                if ( x.classList.contains("selected-image") && selectedBox === "" ) {
+                    x.classList.remove("selected-image" )
+                    imageSelected = false
+                } else if ( imageSelected && selectedBox === "") {
+                    let deselect = document.querySelector(".selected-image")
+                    deselect.classList.remove("selected-image")
+                    imageSelected = false
+                    if ( selectionObj[inputImage] === false ) {
                         x.classList.add("selected-image")
                         selectedImage = inputImage
                         imageSelected = true
                     } else {
-                        selectedBox.innerHTML = `<img class="bingo-image" src="${inputImage}">`
-                        inputArr.push(inputImage)
-                        deSelectBox()
-                        document.querySelector(".selected-box").classList.remove("selected-box")
-                        checkReadyImages(inputArr.length)
+                        let fullBoxes = document.querySelectorAll(".full")
+                        fullBoxes.forEach( (x)=> {
+                            let thisBox = x.firstChild
+                            if ( thisBox.getAttribute("src") === inputImage ) {
+                                x.classList.add("warning")
+                                setTimeout( ()=>{
+                                    x.classList.remove("warning")
+                                },1500)
+                            }
+                        })
                     }
+                } else if ( selectionObj[inputImage] === false ) {
+                    if ( selectedBox === "" ) {
+                        selectedImage = inputImage
+                        if (selectionObj[selectedImage] === false) {
+                            x.classList.add("selected-image")
+                            imageSelected = true
+                        }
+                    } else if ( selectedBox != "" ) {
+                        selectedBox.innerHTML = `<img class="bingo-image" src="${inputImage}">`
+                        selectionObj[inputImage] = true
+                        checkReadyImages()
+                        selectedBox.classList.remove("selected-box")
+                        selectedBox.classList.remove("empty")
+                        selectedBox.classList.add("full")
+                        selectedBox = ""
+                        boxSelected = false
+                    }
+                } else if ( selectionObj[inputImage] === true ) {
+                    let fullBoxes = document.querySelectorAll(".full")
+                    fullBoxes.forEach( (x)=> {
+                        let thisBox = x.firstChild
+                        if ( thisBox.getAttribute("src") === inputImage ) {
+                            x.classList.add("warning")
+                            setTimeout( ()=>{
+                                x.classList.remove("warning")
+                            },1500)
+                        }
+                    })
                 }
             })
         }
     })
-    let bingoGridBoxes = document.querySelectorAll(".bingo-grid-box")
-    bingoGridBoxes.forEach( (box)=>{
-        box.addEventListener("click",()=>{
-            thisBox = box
-            if ( boxSelected ) {
-                if ( thisBox.classList.contains("selected-box") ) {
-                    thisBox.classList.remove("selected-box")
-                    boxSelected = false
-                    selectedBox = ""
-                } else {
-                    if ( thisBox.innerHTML != "" ) {
-                        let removeImg = thisBox.firstChild.getAttribute("src")
-                        cleanUp(thisBox,removeImg)
-                        checkReadyImages(inputArr.length)
-                    }
-                    document.querySelector(".selected-box").classList.remove("selected-box")
-                    thisBox.classList.add("selected-box")
-                    selectedBox = thisBox
+    let bingoImageBoxes = document.querySelectorAll(".bingo-grid-box")
+    bingoImageBoxes.forEach( (x)=>{
+        x.addEventListener("click",()=>{
+            if ( x.classList.contains("selected-box") && selectedImage === "" ) {
+                x.classList.remove("selected-box")
+                selectedBox = ""
+                boxSelected = false
+            } else if ( boxSelected && selectedImage === "" ) {
+                let deselect = document.querySelector(".selected-box")
+                deselect.classList.remove("selected-box")
+                selectedBox = ""
+                boxSelected = false
+                if ( !x.classList.contains("full") ) {
+                    x.classList.add("selected-box")
+                    selectedBox = x
+                    boxSelected = true
                 }
-            } else if ( !boxSelected ) {
-                if ( imageSelected ) {
-                    if ( thisBox.innerHTML != "" ) {
-                        let removeImg = thisBox.firstChild.getAttribute("src")
-                        cleanUp(thisBox,removeImg)
-                        checkReadyImages(inputArr.length)
-                    }
-                    thisBox.innerHTML = `<img class="bingo-image" src="${selectedImage}">`
-                    thisBox.classList.remove("empty")
-                    thisBox.classList.add("full")
-                    inputArr.push(selectedImage)
-                    document.querySelector(".selected-image").classList.remove("selected-image")
+            } else if ( x.classList.contains("empty") ) {
+                if ( selectedImage != "" && selectedBox === "" ) {
+                    x.innerHTML = `<img class="bingo-image" src="${selectedImage}">`
+                    let deselect = document.querySelector(".selected-image")
+                    deselect.classList.remove("selected-image")
+                    x.classList.remove("empty")
+                    x.classList.add("full")
+                    selectionObj[selectedImage] = true
+                    checkReadyImages()
                     selectedImage = ""
                     imageSelected = false
-                    checkReadyImages(inputArr.length)
-                } else {
-                    if ( thisBox.innerHTML != "" ) {
-                        let removeImg = thisBox.firstChild.getAttribute("src")
-                        cleanUp(thisBox,removeImg)
-                        checkReadyImages(inputArr.length)
-                    }
-                    selectedBox = box
+                } else if ( selectedImage === "" && selectedBox === "" ) {
+                    selectedBox = x
+                    x.classList.add("selected-box")
                     boxSelected = true
-                    thisBox.classList.add("selected-box")
                 }
+            } else if ( x.classList.contains("full") ) {
+                let thisBox = x.firstChild
+                selectionObj[thisBox.getAttribute("src")] = false
+                checkReadyImages()
+                x.innerHTML = ""
+                x.classList.add("empty")
+                x.classList.remove("full")
             }
         })
     })
-}
-    
-function cleanUp(target,image){
-    target.innerHTML = ""
-    target.classList.remove("full")
-    target.classList.add("empty")
-    let index = inputArr.indexOf(image)
-    inputArr.splice(index,1)
-}
-function deSelectBox(){
-    selectedBox.classList.remove("empty")
-    selectedBox.classList.add("full")
-    selectedBox = ""
-    boxSelected = false
+
 }
 
-function checkReadyImages(len) {
-    if ( len === gameType ) {
+function checkReadyImages() {
+    imagesReady = 0
+    for ( i in selectionObj ) {
+        if ( selectionObj[i] === true ) {
+            imagesReady++
+        }
+    }
+    if ( imagesReady === gameType ) {
         readyForBingo = true
         if ( lang === "en" ) {
             readyBtn.textContent = "READY"
