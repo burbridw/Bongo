@@ -4,23 +4,22 @@ let activeArr = []
 let selectArr = []
 let answersArr = []
 let bingoArr = []
-let inputArr = []
+let goBackBtn = ""
+let imgList = ""
 let selectionOpen = false
 let gameActive = false
 let bingoActive = false
+let inputArr = []
+let selectedImage = ""
+let selectedBox = ""
+let boxSelected = false
+let imageSelected = false
+let imagesReady = 0
 let readyForBingo = false
 let gameLeader = false
-let bingoImageSeen = false
-let beingDragged = false
-let movingCurrentImage = false
-let goBackBtn = ""
-let imgList = ""
-let selectedImage = ""
-let imagesReady = 0
 let currentBingoImage = 0
 let lang = "en"
-let draggedItem
-let sourceBox
+let bingoImageSeen = false
 
 const gameBtnDisplay = document.getElementById("game-btn-container")
 const topicBtnDisplay = document.getElementById("topic-btn-container")
@@ -266,43 +265,6 @@ readyBtn.addEventListener("click",()=>{
 
 leaderBtn.addEventListener("click",leadGame)
 
-function dragStart(event) {
-    if ( !bingoActive ) {
-        draggedItem = event.target
-        inputImage = draggedItem.getAttribute("src")
-        if ( inputArr.includes(inputImage) ) {
-            let fullGridBoxes = document.querySelectorAll(".full")
-            fullGridBoxes.forEach( (box)=>{
-                let thisBox = box.firstChild
-                if ( thisBox.getAttribute("src") === inputImage ) {
-                    box.classList.add("warning")
-                    setTimeout( ()=>{
-                        box.classList.remove("warning")
-                    },1500)
-                }
-            })
-        } else {
-            selectedImage = inputImage
-            beingDragged = true
-            draggedItem = ""
-        }
-    }
-}
-
-function dragOver(event) {
-    event.preventDefault()
-}
-
-function moveBingoImage(event) {
-    sourceBox = event.target.parentElement
-    draggedItem = event.target
-    inputImage = draggedItem.getAttribute("src")
-    selectedImage = inputImage
-    beingDragged = true
-    movingCurrentImage = true
-    draggedItem = ""
-}
-
 function renderGame(arr){
     if ( !topicBtnDisplay.classList.contains("hide-me") ) {
         topicBtnDisplay.classList.add("hide-me")
@@ -343,80 +305,109 @@ function renderGame(arr){
     for ( let i = 0; i < gameType; i++ ) {
         bingoGrid.innerHTML += `<div class="bingo-grid-box empty"></div>`
     }
-
     gameContainer.classList.remove("reduced")
     let selectionImages = document.querySelectorAll(".bingo-selection-image")
-
     selectionImages.forEach( (x) => {
-        x.addEventListener("dragstart",dragStart)
+        if ( !bingoActive ) {
+            x.addEventListener("click",()=>{
+                inputImage = x.getAttribute("src")
+                if ( inputArr.includes(inputImage) ) {
+                    let fullGridBoxes = document.querySelectorAll(".full")
+                    fullGridBoxes.forEach( (box)=>{
+                        let thisBox = box.firstChild
+                        if ( thisBox.getAttribute("src") === inputImage ) {
+                            box.classList.add("warning")
+                            setTimeout( ()=>{
+                                box.classList.remove("warning")
+                            },1500)
+                        }
+                    })
+                } else if ( imageSelected ) {
+                    if ( x.classList.contains("selected-image") ) {
+                        x.classList.remove("selected-image")
+                        imageSelected = false
+                    } else {
+                        document.querySelector(".selected-image").classList.remove("selected-image")
+                        x.classList.add("selected-image")
+                        selectedImage = inputImage
+                    }
+                } else if ( !imageSelected ) {
+                    if ( !boxSelected ) {
+                        x.classList.add("selected-image")
+                        selectedImage = inputImage
+                        imageSelected = true
+                    } else {
+                        selectedBox.innerHTML = `<img class="bingo-image" src="${inputImage}">`
+                        inputArr.push(inputImage)
+                        deSelectBox()
+                        document.querySelector(".selected-box").classList.remove("selected-box")
+                        checkReadyImages(inputArr.length)
+                    }
+                }
+            })
+        }
     })
     let bingoGridBoxes = document.querySelectorAll(".bingo-grid-box")
     bingoGridBoxes.forEach( (box)=>{
         box.addEventListener("click",()=>{
             thisBox = box
-            if ( thisBox.innerHTML != "" ) {
-                let removeImg = thisBox.firstChild.getAttribute("src")
-                cleanUp(thisBox,removeImg)
-                checkReadyImages(inputArr.length)
-            }
-        })
-    })
-    bingoGridBoxes.forEach( (box) => {
-        box.addEventListener("dragover",dragOver)
-        box.addEventListener("drop",(event)=>{
-            if ( beingDragged && !movingCurrentImage) {
-                thisBox = box
-                if ( thisBox.innerHTML != "" ) {
-                    let removeImg = thisBox.firstChild.getAttribute("src")
-                    cleanUp(thisBox,removeImg)
-                    checkReadyImages(inputArr.length)
+            if ( boxSelected ) {
+                if ( thisBox.classList.contains("selected-box") ) {
+                    thisBox.classList.remove("selected-box")
+                    boxSelected = false
+                    selectedBox = ""
+                } else {
+                    if ( thisBox.innerHTML != "" ) {
+                        let removeImg = thisBox.firstChild.getAttribute("src")
+                        cleanUp(thisBox,removeImg)
+                        checkReadyImages(inputArr.length)
+                    }
+                    document.querySelector(".selected-box").classList.remove("selected-box")
+                    thisBox.classList.add("selected-box")
+                    selectedBox = thisBox
                 }
-                if ( selectedImage != "" ) {
+            } else if ( !boxSelected ) {
+                if ( imageSelected ) {
+                    if ( thisBox.innerHTML != "" ) {
+                        let removeImg = thisBox.firstChild.getAttribute("src")
+                        cleanUp(thisBox,removeImg)
+                        checkReadyImages(inputArr.length)
+                    }
                     thisBox.innerHTML = `<img class="bingo-image" src="${selectedImage}">`
-                    let allBingoImages = document.querySelectorAll(".bingo-image")
-                    allBingoImages.forEach( (bingoImage) =>{
-                        bingoImage.addEventListener("dragstart",moveBingoImage)
-                    })
                     thisBox.classList.remove("empty")
                     thisBox.classList.add("full")
                     inputArr.push(selectedImage)
+                    document.querySelector(".selected-image").classList.remove("selected-image")
                     selectedImage = ""
-                    beingDragged = false
+                    imageSelected = false
                     checkReadyImages(inputArr.length)
+                } else {
+                    if ( thisBox.innerHTML != "" ) {
+                        let removeImg = thisBox.firstChild.getAttribute("src")
+                        cleanUp(thisBox,removeImg)
+                        checkReadyImages(inputArr.length)
+                    }
+                    selectedBox = box
+                    boxSelected = true
+                    thisBox.classList.add("selected-box")
                 }
-            } else if ( beingDragged && movingCurrentImage ) {
-                thisBox = box
-                if ( thisBox.innerHTML != "" ) {
-                    let removeImg = thisBox.firstChild.getAttribute("src")
-                    cleanUp(thisBox,removeImg)
-                    checkReadyImages(inputArr.length)
-                }
-                thisBox.innerHTML = `<img class="bingo-image" src="${selectedImage}">`
-                    let allBingoImages = document.querySelectorAll(".bingo-image")
-                    allBingoImages.forEach( (bingoImage) =>{
-                        bingoImage.addEventListener("dragstart",moveBingoImage)
-                    })
-                    thisBox.classList.remove("empty")
-                    thisBox.classList.add("full")
-                    sourceBox.innerHTML = ""
-                    sourceBox.classList.remove("full")
-                    sourceBox.classList.add("empty")
-                    sourceBox = ""
-                    selectedImage = ""
-                    beingDragged = false
-                    movingCurrentImage = false
-                    checkReadyImages(inputArr.length)
             }
         })
     })
 }
-
+    
 function cleanUp(target,image){
     target.innerHTML = ""
     target.classList.remove("full")
     target.classList.add("empty")
     let index = inputArr.indexOf(image)
     inputArr.splice(index,1)
+}
+function deSelectBox(){
+    selectedBox.classList.remove("empty")
+    selectedBox.classList.add("full")
+    selectedBox = ""
+    boxSelected = false
 }
 
 function checkReadyImages(len) {
