@@ -305,6 +305,53 @@ function moveBingoImage(event) {
     draggedItem = ""
 }
 
+function dragDrop(box) {
+    if ( beingDragged && !movingCurrentImage) {
+        thisBox = box
+        if ( thisBox.innerHTML != "" ) {
+            let removeImg = thisBox.firstChild.getAttribute("src")
+            cleanUp(thisBox,removeImg)
+            checkReadyImages(inputArr.length)
+        }
+        if ( selectedImage != "" ) {
+            thisBox.innerHTML = `<img class="bingo-image" src="${selectedImage}">`
+            let allBingoImages = document.querySelectorAll(".bingo-image")
+            allBingoImages.forEach( (bingoImage) =>{
+                bingoImage.addEventListener("dragstart",moveBingoImage)
+            })
+            thisBox.classList.remove("empty")
+            thisBox.classList.add("full")
+            inputArr.push(selectedImage)
+            selectedImage = ""
+            beingDragged = false
+            checkReadyImages(inputArr.length)
+        }
+    } else if ( beingDragged && movingCurrentImage ) {
+        thisBox = box
+        if ( thisBox.innerHTML === "") {
+            thisBox.innerHTML = `<img class="bingo-image" src="${selectedImage}">`
+            thisBox.classList.remove("empty")
+            thisBox.classList.add("full")
+            sourceBox.innerHTML = ""
+            sourceBox.classList.remove("full")
+            sourceBox.classList.add("empty")
+        } else if ( thisBox.innerHTML != "" ) {
+            let replaceImg = thisBox.firstChild.getAttribute("src")
+            thisBox.innerHTML = `<img class="bingo-image" src="${selectedImage}">`
+            sourceBox.innerHTML = `<img class="bingo-image" src="${replaceImg}">`
+        }
+        let allBingoImages = document.querySelectorAll(".bingo-image")
+        allBingoImages.forEach( (bingoImage) =>{
+            bingoImage.addEventListener("dragstart",moveBingoImage)
+        })
+        sourceBox = ""
+        selectedImage = ""
+        beingDragged = false
+        movingCurrentImage = false
+        checkReadyImages(inputArr.length)
+    }
+}
+
 function renderGame(arr){
     if ( !topicBtnDisplay.classList.contains("hide-me") ) {
         topicBtnDisplay.classList.add("hide-me")
@@ -365,50 +412,8 @@ function renderGame(arr){
     })
     bingoGridBoxes.forEach( (box) => {
         box.addEventListener("dragover",dragOver)
-        box.addEventListener("drop",(event)=>{
-            if ( beingDragged && !movingCurrentImage) {
-                thisBox = box
-                if ( thisBox.innerHTML != "" ) {
-                    let removeImg = thisBox.firstChild.getAttribute("src")
-                    cleanUp(thisBox,removeImg)
-                    checkReadyImages(inputArr.length)
-                }
-                if ( selectedImage != "" ) {
-                    thisBox.innerHTML = `<img class="bingo-image" src="${selectedImage}">`
-                    let allBingoImages = document.querySelectorAll(".bingo-image")
-                    allBingoImages.forEach( (bingoImage) =>{
-                        bingoImage.addEventListener("dragstart",moveBingoImage)
-                    })
-                    thisBox.classList.remove("empty")
-                    thisBox.classList.add("full")
-                    inputArr.push(selectedImage)
-                    selectedImage = ""
-                    beingDragged = false
-                    checkReadyImages(inputArr.length)
-                }
-            } else if ( beingDragged && movingCurrentImage ) {
-                thisBox = box
-                if ( thisBox.innerHTML != "" ) {
-                    let removeImg = thisBox.firstChild.getAttribute("src")
-                    cleanUp(thisBox,removeImg)
-                    checkReadyImages(inputArr.length)
-                }
-                thisBox.innerHTML = `<img class="bingo-image" src="${selectedImage}">`
-                    let allBingoImages = document.querySelectorAll(".bingo-image")
-                    allBingoImages.forEach( (bingoImage) =>{
-                        bingoImage.addEventListener("dragstart",moveBingoImage)
-                    })
-                    thisBox.classList.remove("empty")
-                    thisBox.classList.add("full")
-                    sourceBox.innerHTML = ""
-                    sourceBox.classList.remove("full")
-                    sourceBox.classList.add("empty")
-                    sourceBox = ""
-                    selectedImage = ""
-                    beingDragged = false
-                    movingCurrentImage = false
-                    checkReadyImages(inputArr.length)
-            }
+        box.addEventListener("drop",()=>{
+            dragDrop(box)
         })
     })
 }
