@@ -180,8 +180,9 @@ function renderSelect(targetDiv, arr){
     } else {
         currentDiv.innerHTML = `<div class="inner-btn-menu"><button id="selectall" onClick="selectAll()">全て</button><button id="clearselection" onClick="selectClear()">削除</button><button id="closewindow" onClick="passSelect()">承認して戻る</button></div>`
     }
-        for ( let i = 0; i < arr.length; i++) {
-    currentDiv.innerHTML += `<div class="img-box"><img class="select-img unselected" src="${arr[i]}"></div>`
+    for ( let i = 0; i < arr.length; i++) {
+        currentDiv.innerHTML += `<div class="img-box"><img class="select-img unselected" src="${arr[i]}"></div>`
+    }
     imgList = document.querySelectorAll(`.select-img`)
     imgList.forEach( (img) => {
         let reselectImg = img.getAttribute("src")
@@ -204,8 +205,7 @@ function renderSelect(targetDiv, arr){
                 img.classList.add("unselected")
             }
         }) 
-    })
-    } 
+    }) 
 }
 
 function selectAll() {
